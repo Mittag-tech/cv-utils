@@ -1,0 +1,9 @@
+# result directory
+result/
+result/*
+
+# image, video
+*.jpg
+*.png
+*.mp4
+*.mkv
