@@ -8,6 +8,7 @@ import yaml
 
 import cv2
 
+IMAGE_EXT = [".jpg", ".jpeg", ".png", ".PNG"]
 
 def _write_info(info_dict, output_dir:Path, yaml_name="video-info.yaml"):
     """Write video information to yaml file.
@@ -22,7 +23,7 @@ def _write_info(info_dict, output_dir:Path, yaml_name="video-info.yaml"):
         yaml.dump(info_dict, yf, default_flow_style=False)
 
 
-def main(video_path:Path, output_dir:Path):
+def main(video_path:Path, output_dir:Path, ext:str):
     """Create images from video.
     
     input:
@@ -34,7 +35,7 @@ def main(video_path:Path, output_dir:Path):
     while cap.isOpened():
         ret, frame = cap.read()
         if ret:
-            img_name = output_dir / f'images/{frame_count:06}.PNG'
+            img_name = output_dir / f'images/{frame_count:06}{ext}'
             cv2.imwrite(str(img_name), frame)
             print('\rsuccess! ==> {}'.format(str(img_name)), end='')
             frame_count += 1
@@ -57,6 +58,7 @@ def _parser():
     args = argparse.ArgumentParser(description="show annotation bbox on image.")
     args.add_argument("--video_path", help="set video path", type=str)
     args.add_argument("--output_dir", help="set output dir path.", default="result/", type=str)
+    args.add_argument("--ext", "-e", help=f"set any extinction, {IMAGE_EXT}", default=".PNG")
     return args.parse_args()
 
 
@@ -65,9 +67,10 @@ if __name__ == '__main__':
     args = _parser()
     video_path = Path(args.video_path)
     output_dir = Path(args.output_dir)
+    ext = args.ext
     image_dir = output_dir / "images"
     image_dir.mkdir(exist_ok=True, parents=True)
 
     # Run main function
-    main(video_path, output_dir)
+    main(video_path, output_dir, ext)
     print("\nsuccess all.")
