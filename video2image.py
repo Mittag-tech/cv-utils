@@ -23,7 +23,7 @@ def _write_info(info_dict, output_dir:Path, yaml_name="video-info.yaml"):
         yaml.dump(info_dict, yf, default_flow_style=False)
 
 
-def main(video_path:Path, output_dir:Path, ext:str):
+def main(video_path:Path, output_dir:Path, ext:str, initial_frame:int):
     """Create images from video.
     
     input:
@@ -31,7 +31,7 @@ def main(video_path:Path, output_dir:Path, ext:str):
         output_dir: Path of the directory where the result would be stored.
     """
     cap = cv2.VideoCapture(str(video_path))
-    frame_count = 0
+    frame_count = initial_frame
     while cap.isOpened():
         ret, frame = cap.read()
         if ret:
@@ -59,6 +59,7 @@ def _parser():
     args.add_argument("--video_path", help="set video path", type=str)
     args.add_argument("--output_dir", help="set output dir path.", default="result/", type=str)
     args.add_argument("--ext", "-e", help=f"set any extinction, {IMAGE_EXT}", default=".PNG")
+    args.add_argument("--initial_frame", "-i", help="settings initial frame number.", default=0, type=int)
     return args.parse_args()
 
 
@@ -70,7 +71,8 @@ if __name__ == '__main__':
     ext = args.ext
     image_dir = output_dir / "images"
     image_dir.mkdir(exist_ok=True, parents=True)
+    initial_frame = args.initial_frame
 
     # Run main function
-    main(video_path, output_dir, ext)
+    main(video_path, output_dir, ext, initial_frame)
     print("\nsuccess all.")
