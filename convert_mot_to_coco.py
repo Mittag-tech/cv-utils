@@ -1,3 +1,4 @@
+import argparse
 import numpy as np
 import json
 from pathlib import Path
@@ -6,31 +7,56 @@ import cv2
 
 
 # Use the same script for MOT16
-DATA_PATH = Path('datasets/baseline-gr')
-OUT_PATH = DATA_PATH / 'annotations'
-SPLITS = ['train', 'val', 'test']  # --> split training data to train_half and val_half.
-CATEGORY = [{"id": 1, "name": "person"},
-            {"id": 2, "name": "agv_1_R"},
-            {"id": 3, "name": "agv_1_L"},
-            {"id": 4, "name": "agv_2_L"},
-            {"id": 5, "name": "agv_2_R"}]
 EXTS = [".jpg", ".jpeg", ".png", ".PNG"]
 
 def json_encode(obj):
     if isinstance(obj, Path):
         return obj.as_posix()
+    
+def set_category(label_txt:Path):
+    label_list = label_txt.read_text().split("\n")
+    category_list = []
+    for i, label in enumerate(label_list):
+        category_dict = {}
+        category_dict["id"] = i + 1
+        category_dict["name"] = label
+        category_list.append(category_dict)
+    return category_list
+
+def arg_parser():
+    parser = argparse.ArgumentParser(description="convert mot format to coco format.")
+    parser.add_argument("--data", help="set directory path of dataset.", default="datasets/")
+    parser.add_argument("--output", help="set directory name of output.", default="annotations")
+    parser.add_argument("--splits", help="set split direstory.", default=['train', 'val', 'test'], nargs="*")
+    parser.add_argument("--label_txt", "-l", help="set labels.txt path")
+    return parser.parse_args()
+
 
 if __name__ == '__main__':
-    OUT_PATH.mkdir(exist_ok=True)
+    args = arg_parser()
+    data = Path(args.data)
+    output = data / args.output
+    splits = args.splits
+    category = set_category(Path(args.label_txt))
+    print(
+        f"""set argments
+        DATA_PATH: {str(data)}
+        OUT_OATH : {str(output)}
+        SPLITS   : {splits}
+        CATEGORY : {category}
+        """
+    )
 
-    for split in SPLITS:
-        data_path = DATA_PATH / split
+    output.mkdir(exist_ok=True)
+
+    for split in splits:
+        data_path = data / split
         if not data_path.exists():
             print(f"{data_path} is not exists.")
             continue
-        out_path = OUT_PATH / '{}.json'.format(split)
+        out_path = output / '{}.json'.format(split)
         out = {'images': [], 'annotations': [], 'videos': [],
-               'categories': CATEGORY}
+               'categories': category}
         seqs = [seq for seq in data_path.iterdir() if seq.is_dir()]
         image_cnt = 0
         ann_cnt = 0
