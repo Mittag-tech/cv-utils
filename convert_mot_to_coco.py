@@ -29,6 +29,8 @@ def arg_parser():
     parser.add_argument("--output", help="set directory name of output.", default="annotations")
     parser.add_argument("--splits", help="set split direstory.", default=['train', 'val', 'test'], nargs="*")
     parser.add_argument("--label_txt", "-l", help="set labels.txt path")
+    parser.add_argument("--single_flag", "-s", help="If you set this flag, this code create single class dataset.", action="store_true")
+    parser.add_argument("--class_num", help="set class number > 1 with single-flag", type=int)
     return parser.parse_args()
 
 
@@ -38,6 +40,10 @@ if __name__ == '__main__':
     output = data / args.output
     splits = args.splits
     category = set_category(Path(args.label_txt))
+    
+    if args.single_flag:
+        category = [category[args.class_num - 1]]
+    
     print(
         f"""set argments
         DATA_PATH: {str(data)}
@@ -89,8 +95,10 @@ if __name__ == '__main__':
                     frame_id = int(anns[i][0])
                     track_id = int(anns[i][1])
                     cat_id = int(anns[i][7])
-                    ann_cnt += 1
                     category_id = int(anns[i][7])
+                    if args.single_flag and category_id != args.class_num:
+                        continue
+                    ann_cnt += 1
                     ann = {'id': ann_cnt,
                            'category_id': category_id,
                            'image_id': image_cnt + frame_id,
