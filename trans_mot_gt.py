@@ -48,7 +48,7 @@ def rotate_image(img, deg, save_img_path):
 
 def read_gt(text_path:Path):
     # gt.txt
-    # frame_id, track_id, x, y, w, h, "not ignored", class_id, visibility, <skipped>
+    # frame_id, track_id, top_x, top_y, w, h, "not ignored", class_id, visibility, <skipped>
     gt_list = []
     for line in text_path.read_text().split("\n"):
         if not line:
@@ -62,49 +62,26 @@ def read_gt(text_path:Path):
 
 
 def fix_gt(img, gt, deg):
-    bbox_pos = calc_rotation(img.size, gt[2:6], deg)
-    for i, pos in enumerate(bbox_pos):
-        gt[i + 2] = str(pos)
+    top_x, top_y, w, h = gt[2:6]
+    if deg == 90:
+        gt[2] = top_y
+        gt[3] = img.width - (top_x + w)
+        gt[4] = h
+        gt[5] = w
+    elif deg == 180:
+        gt[2] = img.width - (top_x + w)
+        gt[3] = img.height - (top_y + h)
+    elif deg == 270 or deg == -90:
+        gt[2] = img.height - (top_y + h)
+        gt[3] = top_x
+        gt[4] = h
+        gt[5] = w
+    gt = [str(x) for x in gt]
     return ",".join(gt)
-
-def calc_rotation(orig_size, row, roll, gyro_center=0.5):
-    # row = [x, y, w, h]
-    shift_center_x = orig_size[0] * gyro_center
-    shift_center_y = orig_size[1] * gyro_center
-    quadrant_pos_x = row[0] - shift_center_x
-    quadrant_pos_y = row[1] - shift_center_y
-    roll_theta = math.radians(roll)
-    top_left, top_right, bottom_left, bottom_right = calc_tlbr(quadrant_pos_x, quadrant_pos_y, row[2], row[3])
-    orig_bbox_data = [(quadrant_pos_x, quadrant_pos_y), top_left, top_right, bottom_left, bottom_right]
-    roll_bbox_data = []
-    for pos in orig_bbox_data:
-        radius = math.sqrt(pos[0] ** 2 + pos[1] ** 2)
-        base_theta = math.atan2(pos[1], pos[0])
-        theta = base_theta + roll_theta
-        result_x = radius * math.cos(theta) + shift_center_x
-        result_y = radius * math.sin(theta) + shift_center_y
-        roll_bbox_data.append((result_x, result_y))
-    roll_center_x = roll_bbox_data[0][0]
-    roll_center_y = roll_bbox_data[0][1]
-    roll_width = abs(roll_bbox_data[1][0] - roll_bbox_data[4][0])
-    roll_height = abs(roll_bbox_data[2][1] - roll_bbox_data[3][1])
-    return roll_center_x, roll_center_y, roll_width, roll_height
-
-
-def calc_tlbr(x, y, w, h):
-    left = x - w / 2
-    right = x + w / 2
-    top = y - h / 2
-    bottom = y + h / 2
-    top_left = (left, top)
-    top_right = (right, top)
-    bottom_left = (left, bottom)
-    bottom_right = (right, bottom)
-    return top_left, top_right, bottom_left, bottom_right
 
 
 if __name__ == "__main__":
-    deg_list = [90]
+    deg_list = [90, 180, 270]
     current_dir = Path.cwd()
     dataset_path = current_dir / "dataset"
     for deg in deg_list:
