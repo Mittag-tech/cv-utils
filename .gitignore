@@ -1,6 +1,7 @@
 # result directory
 result/
 datasets/
+dataset/
 
 # image, video
 *.jpg
