@@ -78,7 +78,8 @@ if __name__ == '__main__':
             for i in range(num_images):
                 img = cv2.imread(str(images[i]))
                 height, width = img.shape[:2]
-                image_info = {'file_name': '{}'.format(str(images[i]).strip(str(data_path))),  # image name.
+                file_info = f"{images[i].parents[1].stem}/{images[i].parents[0].stem}/{images[i].name}"
+                image_info = {'file_name': '{}'.format(str(file_info)),  # image name.
                               'id': image_cnt + i + 1,  # image number in the entire training set.
                               'frame_id': i + 1,  # image number in the video sequence, starting from 1.
                               'prev_image_id': image_cnt + i if i > 0 else -1,  # image number in the entire training set.
