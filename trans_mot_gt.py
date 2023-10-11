@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import math
 from pathlib import Path
 import shutil
 
@@ -9,13 +8,15 @@ from PIL import Image
 
 
 def main(dataset_path:Path, deg:float):
-    split_list = ["test", "train", "val"]
+    split_list = ["train", "val"]
     for split in split_list:
         split_dir = dataset_path / split
         if not split_dir.exists():
             continue
         for data_dir in sorted(split_dir.iterdir()):
             if not data_dir.is_dir():
+                continue
+            if "_" in data_dir.stem:
                 continue
             gt_dir = data_dir / "gt"
             gt_file = gt_dir / "gt.txt"
@@ -29,7 +30,7 @@ def main(dataset_path:Path, deg:float):
             save_txt_dir.mkdir(exist_ok=True, parents=True)
             for i, img_path in enumerate(sorted(img_dir.iterdir())):
                 img = Image.open(str(img_path))
-                save_img_path = save_img_dir / f"{img_path.stem}{img_path.suffix}"
+                save_img_path = save_img_dir / f"{img_path.name}"
                 rotate_image(img, deg, save_img_path)
                 gt_fixed = fix_gt(img, gt_list[i], deg)
                 save_gt_list.append(gt_fixed)
@@ -84,5 +85,7 @@ if __name__ == "__main__":
     deg_list = [90, 180, 270]
     current_dir = Path.cwd()
     dataset_path = current_dir / "dataset"
+    dataset_path_aug = dataset_path.parents[0] / f"{dataset_path.stem}_aug"
+    shutil.copytree(dataset_path, dataset_path_aug)
     for deg in deg_list:
-        main(dataset_path, deg)
+        main(dataset_path_aug, deg)
